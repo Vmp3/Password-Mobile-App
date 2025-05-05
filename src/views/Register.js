@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Button as RNButton } from 'react-native';
 import Header from '../components/Header';
 import CustomInput from '../components/CustomInput';
 import Button from '../components/Button';
