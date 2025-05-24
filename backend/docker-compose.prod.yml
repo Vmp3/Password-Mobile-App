@@ -3,9 +3,9 @@ version: '3.8'
 services:
   postgres:
     image: postgres:14-alpine
-    container_name: postgres_password_app_prod
+    container_name: postgres_password_app_backend_prod
     volumes:
-      - postgres_data_prod:/var/lib/postgresql/data
+      - postgres_data_backend_prod:/var/lib/postgresql/data
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -21,9 +21,9 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile.prod
-    container_name: backend_password_app_prod
+    container_name: backend_password_app_prod_only
     depends_on:
       postgres:
         condition: service_healthy
@@ -33,16 +33,5 @@ services:
       - DATABASE_URL=host=postgres user=postgres password=postgres dbname=password_app port=5432 sslmode=disable
     restart: unless-stopped
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.prod
-    container_name: frontend_password_app_prod
-    depends_on:
-      - backend
-    ports:
-      - "80:80"
-    restart: unless-stopped
-
 volumes:
-  postgres_data_prod: 
+  postgres_data_backend_prod: 
