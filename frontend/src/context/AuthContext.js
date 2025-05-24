@@ -114,6 +114,8 @@ export const AuthProvider = ({ children }) => {
       try {
         await AsyncStorage.removeItem('authToken');
         await AsyncStorage.removeItem('user');
+        
+        await AsyncStorage.removeItem('Senhas');
         setUser(null);
         return true;
       } catch (error) {

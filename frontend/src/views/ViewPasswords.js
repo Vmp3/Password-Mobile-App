@@ -1,25 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 import Header from '../components/Header';
 import PasswordCard from '../components/PasswordCard';
 
 const ViewPasswords = ({ navigation }) => {
   const [passwords, setPasswords] = useState([]);
 
-  useEffect(() => {
-    const loadPasswords = async () => {
-      try {
-        const savedPasswords = await AsyncStorage.getItem('Senhas');
-        if (savedPasswords) {
-          setPasswords(JSON.parse(savedPasswords));
-        }
-      } catch (error) {
+  const loadPasswords = async () => {
+    try {
+      const savedPasswords = await AsyncStorage.getItem('Senhas');
+      if (savedPasswords) {
+        setPasswords(JSON.parse(savedPasswords));
+      } else {
+        setPasswords([]);
       }
-    };
+    } catch (error) {
+      setPasswords([]);
+    }
+  };
 
+  useEffect(() => {
     loadPasswords();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadPasswords();
+    }, [])
+  );
 
   const handleClearPasswords = async () => {
     try {
@@ -45,13 +55,19 @@ const ViewPasswords = ({ navigation }) => {
       />
 
       <ScrollView style={styles.scrollView}>
-        {passwords.map((password, index) => (
-          <PasswordCard 
-            key={index}
-            number={index + 1}
-            password={password}
-          />
-        ))}
+        {passwords.map((password, index) => {
+          const passwordValue = typeof password === 'object' && password !== null 
+            ? password.senha || password.password || JSON.stringify(password)
+            : password;
+          
+          return (
+            <PasswordCard 
+              key={index}
+              number={index + 1}
+              password={passwordValue}
+            />
+          );
+        })}
       </ScrollView>
     </View>
   );

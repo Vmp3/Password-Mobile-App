@@ -49,9 +49,11 @@ const PasswordGenerator = ({ navigation }) => {
       const newPassword = generatePassword();
       setPassword(newPassword);
       
-      const updatedPasswords = [...savedPasswords, newPassword];
-      await AsyncStorage.setItem('Senhas', JSON.stringify(updatedPasswords));
-      setSavedPasswords(updatedPasswords);
+      const savedPasswordsFromStorage = await AsyncStorage.getItem('Senhas');
+      const currentStoragePasswords = savedPasswordsFromStorage ? JSON.parse(savedPasswordsFromStorage) : [];
+      const updatedStoragePasswords = [...currentStoragePasswords, newPassword];
+      await AsyncStorage.setItem('Senhas', JSON.stringify(updatedStoragePasswords));
+      
       showToast('Senha gerada com sucesso!');
     } catch (error) {
       showToast('Erro ao gerar senha');
