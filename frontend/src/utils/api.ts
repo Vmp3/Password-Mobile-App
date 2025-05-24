@@ -4,9 +4,13 @@ import { Platform } from 'react-native';
 
 const getBaseURL = () => {
   if (__DEV__) {
+    console.log('Platform.OS:', Platform.OS);
+    
     if (Platform.OS === 'android') {
       return 'http://10.0.2.2:8080/api';
     } else if (Platform.OS === 'ios') {
+      return 'http://localhost:8080/api';
+    } else if (Platform.OS === 'web') {
       return 'http://localhost:8080/api';
     } else {
       return 'http://localhost:8080/api';

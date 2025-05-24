@@ -13,6 +13,7 @@ import (
 	"github.com/Vicente/Password-Mobile-App/backend/app/services"
 	"github.com/Vicente/Password-Mobile-App/backend/app/types"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -65,6 +66,13 @@ func main() {
 	itemController := controllers.NewItemController(itemService)
 
 	app := fiber.New()
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins:     "*",
+		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH",
+		AllowHeaders:     "Origin,Content-Type,Accept,Authorization",
+		AllowCredentials: false,
+	}))
 
 	routes.SetupAuthRoutes(app, authController)
 	routes.SetupItemRoutes(app, itemController)
