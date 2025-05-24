@@ -112,7 +112,7 @@ cd Password-Mobile-App
 ```bash
 cd backend
 
-# Crie o arquivo .env baseado no exemplo
+# Crie o arquivo .env baseado no exemplo (contém PORT e DATABASE_URL)
 cp .env.example .env
 
 # Execute em modo desenvolvimento (com hot reload)
@@ -123,16 +123,17 @@ O backend estará disponível em: `http://localhost:8080`
 
 #### 3. Configure o Frontend
 ```bash
-# Na raiz do projeto
+# Entre na pasta frontend
+cd frontend
+
+# Instale as dependências
 npm install
 
 # Execute o app
 npm start
 ```
 
-O frontend estará disponível em:
-- **Web**: `http://localhost:8081`
-- **Mobile**: Escaneie o QR code com Expo Go
+Aperte A para abrir automaticamente no Android, através do Android Studio
 
 ### 🚀 Produção
 
@@ -140,7 +141,7 @@ O frontend estará disponível em:
 ```bash
 cd backend
 
-# Configure as variáveis de ambiente
+# Crie o arquivo .env baseado no exemplo
 cp .env.example .env
 
 # Execute em modo produção
@@ -149,6 +150,7 @@ docker-compose -f docker-compose.prod.yml up --build -d
 
 #### Frontend
 ```bash
+cd frontend
 npm install
 npm start
 ```
@@ -171,13 +173,16 @@ Password-Mobile-App/
 │   ├── Dockerfile.dev
 │   ├── Dockerfile.prod
 │   └── main.go
-├── src/
-│   ├── components/         # Componentes reutilizáveis
-│   ├── views/             # Telas da aplicação
-│   ├── service/           # Serviços de API
-│   ├── context/           # Context APIs
-│   └── utils/             # Utilitários
-├── assets/                # Imagens e recursos
+├── frontend/
+│   ├── src/
+│   │   ├── components/     # Componentes reutilizáveis
+│   │   ├── views/          # Telas da aplicação
+│   │   ├── service/        # Serviços de API
+│   │   ├── context/        # Context APIs
+│   │   └── utils/          # Utilitários
+│   ├── assets/             # Imagens e recursos
+│   ├── package.json
+│   └── Layout.js
 └── README.md
 ```
 
@@ -225,21 +230,23 @@ Password-Mobile-App/
 
 ## 📝 Variáveis de Ambiente
 
-Crie um arquivo `.env` na pasta `backend/` com:
+O arquivo `.env.example` na pasta `backend/` contém as variáveis essenciais:
 
 ```env
-# Database
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=password_app
-
-# Backend
-DATABASE_URL=host=postgres user=postgres password=postgres dbname=password_app port=5432 sslmode=disable
-HOST=0.0.0.0
+# Backend Configuration
 PORT=8080
+DATABASE_URL=host=postgres user=postgres password=postgres dbname=password_app port=5432 sslmode=disable
+```
 
-# JWT (gerado automaticamente se não definido)
-# JWT_SECRET=seu_jwt_secret_aqui
+**Outras variáveis** são configuradas automaticamente pelo Docker Compose:
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` - Configuração do PostgreSQL
+- `JWT_SECRET` - Gerado automaticamente se não definido
+
+Para usar:
+```bash
+cd backend
+cp .env.example .env
+# Edite .env se necessário
 ```
 
 ## 🚦 Status Codes
