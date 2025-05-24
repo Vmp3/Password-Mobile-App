@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"log"
 	"os"
@@ -10,19 +12,35 @@ import (
 	"github.com/Vicente/Password-Mobile-App/backend/app/routes"
 	"github.com/Vicente/Password-Mobile-App/backend/app/services"
 	"github.com/Vicente/Password-Mobile-App/backend/app/types"
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
+func generateRandomSecret() string {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		log.Fatalf("Falha ao gerar JWT_SECRET: %v", err)
+	}
+	return hex.EncodeToString(bytes)
+}
+
 func main() {
-	// Carregar variáveis de ambiente do arquivo .env
 	if err := godotenv.Load(); err != nil {
 		log.Println("Arquivo .env não encontrado, usando variáveis de ambiente do sistema")
 	}
 
-	// Configurar conexão com o banco de dados
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Println("JWT_SECRET não encontrado, gerando automaticamente...")
+		jwtSecret = generateRandomSecret()
+		os.Setenv("JWT_SECRET", jwtSecret)
+		log.Printf("JWT_SECRET gerado automaticamente: %s", jwtSecret)
+	} else {
+		log.Println("Usando JWT_SECRET fornecido")
+	}
+
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
 		dbURL = "host=localhost user=postgres password=postgres dbname=password_app port=5432 sslmode=disable"
@@ -33,34 +51,31 @@ func main() {
 		log.Fatalf("Falha ao conectar ao banco de dados: %v", err)
 	}
 
-	// Migrar os modelos para o banco de dados
-	if err := db.AutoMigrate(&types.User{}); err != nil {
+	if err := db.AutoMigrate(&types.User{}, &types.Item{}); err != nil {
 		log.Fatalf("Falha ao migrar modelos: %v", err)
 	}
 
-	// Inicializar DAL
 	authDAL := dal.NewAuthDAL(db)
+	itemDAL := dal.NewItemDAL(db)
 
-	// Inicializar serviços
 	authService := services.NewAuthService(authDAL)
+	itemService := services.NewItemService(itemDAL)
 
-	// Inicializar controladores
 	authController := controllers.NewAuthController(authService)
+	itemController := controllers.NewItemController(itemService)
 
-	// Configurar o Gin
-	router := gin.Default()
+	app := fiber.New()
 
-	// Configurar rotas
-	routes.SetupAuthRoutes(router, authController)
+	routes.SetupAuthRoutes(app, authController)
+	routes.SetupItemRoutes(app, itemController)
 
-	// Iniciar o servidor
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 
 	fmt.Printf("Servidor iniciado na porta %s\n", port)
-	if err := router.Run(":" + port); err != nil {
+	if err := app.Listen(":" + port); err != nil {
 		log.Fatalf("Falha ao iniciar o servidor: %v", err)
 	}
-} 
+}

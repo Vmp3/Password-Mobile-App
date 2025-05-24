@@ -5,6 +5,8 @@ import CustomInput from '../components/CustomInput';
 import Button from '../components/Button';
 import Toast from '../components/Toast';
 import PasswordInput from '../components/PasswordInput';
+import { useAuth } from '../context/AuthContext';
+import { validateEmail, validatePassword, validateName } from '../utils/validators';
 
 const Register = ({ navigation }) => {
   const [name, setName] = useState('');
@@ -12,26 +14,29 @@ const Register = ({ navigation }) => {
   const [birthDate, setBirthDate] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [toast, setToast] = useState({ visible: false, message: '' });
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'default' });
+  const [isLoading, setIsLoading] = useState(false);
+  const { register } = useAuth();
 
-  const showToast = (message) => {
-    setToast({ visible: false, message: '' });
+  const showToast = (message, type = 'default') => {
+    setToast({ visible: false, message: '', type: 'default' });
     setTimeout(() => {
-      setToast({ visible: true, message });
+      setToast({ visible: true, message, type });
     }, 0);
   };
 
   const hideToast = () => {
-    setToast({ visible: false, message: '' });
+    setToast({ visible: false, message: '', type: 'default' });
   };
 
-  const handleBack = () => {
-    navigation.navigate('Login');
-  };
-
-  const validateEmail = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
+  const isFormValid = () => {
+    return (
+      name.trim() !== '' &&
+      email.trim() !== '' &&
+      birthDate.trim() !== '' &&
+      password.trim() !== '' &&
+      confirmPassword.trim() !== ''
+    );
   };
 
   const formatBirthDate = (text) => {
@@ -75,59 +80,91 @@ const Register = ({ navigation }) => {
     return true;
   };
 
-  const handleRegister = () => {
-    if (!name.trim()) {
-      showToast('Por favor, informe seu nome');
-      return;
-    }
-
-    if (!email.trim()) {
-      showToast('Por favor, informe seu email');
+  const handleRegister = async () => {
+    const nameValidation = validateName(name);
+    if (!nameValidation.isValid) {
+      showToast(nameValidation.message, 'error');
       return;
     }
 
     if (!validateEmail(email)) {
-      showToast('Por favor, informe um email válido');
+      showToast('Por favor, informe um email válido', 'error');
       return;
     }
 
     if (!birthDate.trim()) {
-      showToast('Por favor, informe sua data de nascimento');
+      showToast('Por favor, informe sua data de nascimento', 'error');
       return;
     }
 
     if (!validateBirthDate(birthDate)) {
-      showToast('Por favor, informe uma data de nascimento válida');
+      showToast('Por favor, informe uma data de nascimento válida', 'error');
       return;
     }
 
-    if (!password.trim()) {
-      showToast('Por favor, informe sua senha');
+    const [day, month, year] = birthDate.split('/');
+    const birthDateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    if (birthDateObj >= today) {
+      showToast('A data de nascimento deve ser anterior ao dia de hoje', 'error');
       return;
     }
 
-    if (password.length < 6) {
-      showToast('A senha deve ter pelo menos 6 caracteres');
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      showToast(passwordValidation.message, 'error');
+      return;
+    }
+
+    if (!confirmPassword.trim()) {
+      showToast('Por favor, confirme sua senha', 'error');
       return;
     }
 
     if (password !== confirmPassword) {
-      showToast('As senhas não coincidem');
+      showToast('As senhas não coincidem', 'error');
       return;
     }
 
-    showToast('Cadastro realizado com sucesso!');
-    setTimeout(() => {
-      navigation.navigate('Login');
-    }, 1000);
+    setIsLoading(true);
+
+    try {
+      const result = await register(name.trim(), email.trim(), birthDate, password, confirmPassword);
+      
+      if (result.success) {
+        showToast('Cadastro realizado com sucesso!', 'success');
+        setTimeout(() => {
+          navigation.navigate('Login');
+        }, 1500);
+      } else {
+        let errorMessage = result.error || 'Erro ao criar conta';
+        
+        if (errorMessage.includes('já cadastrado') || errorMessage.includes('já existe')) {
+          errorMessage = 'Este email já está cadastrado. Use outro email ou faça login.';
+        } else if (errorMessage.includes('email inválido') || errorMessage.includes('formato de email inválido')) {
+          errorMessage = 'Por favor, informe um email válido.';
+        } else if (errorMessage.includes('senhas não coincidem')) {
+          errorMessage = 'As senhas informadas não coincidem.';
+        } else if (!errorMessage.includes('conexão') && !errorMessage.includes('backend')) {
+          errorMessage = 'Erro ao criar conta. Tente novamente.';
+        }
+        
+        showToast(errorMessage, 'error');
+      }
+    } catch (error) {
+      showToast('Erro de conexão. Verifique sua internet.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Header 
         title="Cadastro"
-        onBack={handleBack}
-        showBackButton={true}
+        showBackButton={false}
       />
       
       <View style={styles.content}>
@@ -138,6 +175,7 @@ const Register = ({ navigation }) => {
           onChangeText={setName}
           placeholder="Nome"
           style={styles.input}
+          editable={!isLoading}
         />
 
         <CustomInput
@@ -147,6 +185,7 @@ const Register = ({ navigation }) => {
           style={styles.input}
           keyboardType="email-address"
           autoCapitalize="none"
+          editable={!isLoading}
         />
 
         <CustomInput
@@ -156,6 +195,7 @@ const Register = ({ navigation }) => {
           style={styles.input}
           keyboardType="numeric"
           maxLength={10}
+          editable={!isLoading}
         />
 
         <PasswordInput
@@ -163,6 +203,7 @@ const Register = ({ navigation }) => {
           onChangeText={setPassword}
           placeholder="Senha"
           style={styles.input}
+          editable={!isLoading}
         />
 
         <PasswordInput
@@ -170,13 +211,19 @@ const Register = ({ navigation }) => {
           onChangeText={setConfirmPassword}
           placeholder="Confirmar senha"
           style={styles.input}
+          editable={!isLoading}
         />
 
-        <Button title="CADASTRAR" onPress={handleRegister} />
+        <Button 
+          title={isLoading ? "CADASTRANDO..." : "CADASTRAR"} 
+          onPress={handleRegister}
+          disabled={isLoading || !isFormValid()}
+        />
         
         <TouchableOpacity 
-          style={styles.loginButton}
-          onPress={() => navigation.navigate('Login')}
+          style={[styles.loginButton, isLoading && styles.disabled]}
+          onPress={() => !isLoading && navigation.navigate('Login')}
+          disabled={isLoading}
         >
           <Text style={styles.loginText}>
             Já possui conta? <Text style={styles.loginHighlight}>Entrar agora</Text>
@@ -187,6 +234,7 @@ const Register = ({ navigation }) => {
       <Toast 
         visible={toast.visible}
         message={toast.message}
+        type={toast.type}
         onHide={hideToast}
       />
     </View>
@@ -225,6 +273,9 @@ const styles = StyleSheet.create({
   loginHighlight: {
     color: '#007AFF',
     fontWeight: 'bold',
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });
 

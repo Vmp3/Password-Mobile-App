@@ -14,7 +14,7 @@ import Button from './Button';
 
 const screenWidth = Dimensions.get('window').width;
 
-const SavePasswordModal = ({ visible, password, onSave, onCancel }) => {
+const SavePasswordModal = ({ visible, password, onSave, onCancel, isLoading = false }) => {
   const [passwordName, setPasswordName] = useState('');
   const [currentPassword, setCurrentPassword] = useState('');
 
@@ -26,7 +26,7 @@ const SavePasswordModal = ({ visible, password, onSave, onCancel }) => {
   }, [visible, password]);
 
   const handleSave = () => {
-    if (!passwordName.trim()) {
+    if (!passwordName.trim() || isLoading) {
       return;
     }
     
@@ -35,11 +35,11 @@ const SavePasswordModal = ({ visible, password, onSave, onCancel }) => {
       value: currentPassword,
       date: new Date().toISOString()
     });
-    
-    setPasswordName('');
   };
 
   const handleCancel = () => {
+    if (isLoading) return;
+    
     setPasswordName('');
     onCancel();
   };
@@ -65,6 +65,7 @@ const SavePasswordModal = ({ visible, password, onSave, onCancel }) => {
               onChangeText={setPasswordName}
               placeholder="Nome para a senha"
               style={styles.input}
+              editable={!isLoading}
             />
             
             <CustomInput
@@ -78,16 +79,20 @@ const SavePasswordModal = ({ visible, password, onSave, onCancel }) => {
             
             <View style={styles.buttonsContainer}>
               <TouchableOpacity 
-                style={styles.cancelButton}
+                style={[styles.cancelButton, isLoading && styles.disabledButton]}
                 onPress={handleCancel}
+                disabled={isLoading}
               >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                <Text style={[styles.cancelButtonText, isLoading && styles.disabledText]}>
+                  Cancelar
+                </Text>
               </TouchableOpacity>
               
               <Button 
-                title="Salvar" 
+                title={isLoading ? "Salvando..." : "Salvar"}
                 onPress={handleSave}
-                style={styles.saveButton}
+                style={[styles.saveButton, (!passwordName.trim() || isLoading) && styles.disabledButton]}
+                disabled={!passwordName.trim() || isLoading}
               />
             </View>
           </View>
@@ -158,6 +163,12 @@ const styles = StyleSheet.create({
     color: '#333',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  disabledText: {
+    color: '#999',
   },
 });
 

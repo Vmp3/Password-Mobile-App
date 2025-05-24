@@ -1,1 +1,3 @@
-/backend/docker.env
+/backend/.env
+**/node_modules/
+/frontend/.expo

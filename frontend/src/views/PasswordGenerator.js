@@ -7,6 +7,7 @@ import CustomInput from '../components/CustomInput';
 import Toast from '../components/Toast';
 import SavePasswordModal from '../components/SavePasswordModal';
 import { generatePassword } from '../service/passwordService';
+import * as itemService from '../service/item/itemService';
 import keyImage from '../assets/images.png';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,6 +16,7 @@ const PasswordGenerator = ({ navigation }) => {
   const [savedPasswords, setSavedPasswords] = useState([]);
   const [toast, setToast] = useState({ visible: false, message: '' });
   const [saveModalVisible, setSaveModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { isLoggedIn, logout, user } = useAuth();
 
   useEffect(() => {
@@ -80,29 +82,25 @@ const PasswordGenerator = ({ navigation }) => {
   };
 
   const handleSavePassword = async (passwordData) => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    
     try {
-      const savedPasswordsData = await AsyncStorage.getItem('SavedPasswords');
-      let savedPasswords = [];
+      const result = await itemService.createItem(passwordData.name, passwordData.value);
       
-      if (savedPasswordsData) {
-        savedPasswords = JSON.parse(savedPasswordsData);
+      if (result.success) {
+        setSaveModalVisible(false);
+        showToast('Senha salva com sucesso!');
+        setPassword('');
+      } else {
+        showToast(result.message || 'Erro ao salvar senha');
       }
-      
-      const newPasswordEntry = {
-        ...passwordData,
-        id: Date.now().toString(),
-      };
-      
-      const updatedSavedPasswords = [...savedPasswords, newPasswordEntry];
-      await AsyncStorage.setItem('SavedPasswords', JSON.stringify(updatedSavedPasswords));
-      
-      setSaveModalVisible(false);
-      showToast('Senha salva com sucesso!');
-      
-      setPassword('');
     } catch (error) {
       console.error('Erro ao salvar senha:', error);
-      showToast('Erro ao salvar senha');
+      showToast('Erro de conexão. Verifique sua internet.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -186,7 +184,7 @@ const PasswordGenerator = ({ navigation }) => {
         <CustomInput
           value={password}
           editable={false}
-          placeholder="Sua senha aparecerá aqui"
+          placeholder="Gere sua senha"
           style={styles.passwordInput}
         />
 
@@ -199,10 +197,10 @@ const PasswordGenerator = ({ navigation }) => {
         />
         
         <Button 
-          title="Salvar Senha" 
+          title={isLoading ? "Salvando..." : "Salvar Senha"}
           onPress={handleOpenSaveModal}
           style={password ? styles.actionButton : [styles.actionButton, styles.disabledButton]}
-          disabled={!password}
+          disabled={!password || isLoading}
         />
 
         <Button 
@@ -226,6 +224,7 @@ const PasswordGenerator = ({ navigation }) => {
         password={password}
         onSave={handleSavePassword}
         onCancel={() => setSaveModalVisible(false)}
+        isLoading={isLoading}
       />
 
       <Toast 

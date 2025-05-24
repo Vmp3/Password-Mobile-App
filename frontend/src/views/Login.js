@@ -10,7 +10,8 @@ import PasswordInput from '../components/PasswordInput';
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [toast, setToast] = useState({ visible: false, message: '' });
+  const [toast, setToast] = useState({ visible: false, message: '', type: 'default' });
+  const [isLoading, setIsLoading] = useState(false);
   const { login, isLoggedIn } = useAuth();
 
   useEffect(() => {
@@ -19,56 +20,49 @@ const Login = ({ navigation }) => {
     }
   }, [isLoggedIn, navigation]);
 
-  const showToast = (message) => {
-    setToast({ visible: false, message: '' });
+  const showToast = (message, type = 'default') => {
+    setToast({ visible: false, message: '', type: 'default' });
     setTimeout(() => {
-      setToast({ visible: true, message });
+      setToast({ visible: true, message, type });
     }, 0);
   };
 
   const hideToast = () => {
-    setToast({ visible: false, message: '' });
+    setToast({ visible: false, message: '', type: 'default' });
   };
 
-  const handleBack = () => {
-    navigation.navigate('PasswordGenerator');
-  };
-
-  const validateEmail = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
+  const isFormValid = () => {
+    return email.trim() !== '' && password.trim() !== '';
   };
 
   const handleLogin = async () => {
     if (!email.trim()) {
-      showToast('Por favor, informe seu email');
-      return;
-    }
-
-    if (!validateEmail(email)) {
-      showToast('Por favor, informe um email válido');
+      showToast('Por favor, informe seu email', 'error');
       return;
     }
 
     if (!password.trim()) {
-      showToast('Por favor, informe sua senha');
+      showToast('Por favor, informe sua senha', 'error');
       return;
     }
 
-    if (password.length < 6) {
-      showToast('A senha deve ter pelo menos 6 caracteres');
-      return;
-    }
-
-    const success = await login(email);
+    setIsLoading(true);
     
-    if (success) {
-      showToast('Login realizado com sucesso!');
-      setTimeout(() => {
-        navigation.replace('PasswordGenerator');
-      }, 1000);
-    } else {
-      showToast('Erro ao realizar login');
+    try {
+      const result = await login(email.trim(), password);
+      
+      if (result.success) {
+        showToast('Login realizado com sucesso!', 'success');
+        setTimeout(() => {
+          navigation.replace('PasswordGenerator');
+        }, 1000);
+      } else {
+        showToast('Email ou senha incorretos', 'error');
+      }
+    } catch (error) {
+      showToast('Erro de conexão. Verifique sua internet.', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -76,8 +70,7 @@ const Login = ({ navigation }) => {
     <View style={styles.container}>
       <Header 
         title="Login"
-        onBack={handleBack}
-        showBackButton={true}
+        showBackButton={false}
       />
       
       <View style={styles.content}>
@@ -90,6 +83,7 @@ const Login = ({ navigation }) => {
           style={styles.input}
           keyboardType="email-address"
           autoCapitalize="none"
+          editable={!isLoading}
         />
 
         <PasswordInput
@@ -97,13 +91,19 @@ const Login = ({ navigation }) => {
           onChangeText={setPassword}
           placeholder="Senha"
           style={styles.input}
+          editable={!isLoading}
         />
 
-        <Button title="ENTRAR" onPress={handleLogin} />
+        <Button 
+          title={isLoading ? "ENTRANDO..." : "ENTRAR"} 
+          onPress={handleLogin}
+          disabled={isLoading || !isFormValid()}
+        />
         
         <TouchableOpacity 
-          style={styles.registerButton}
-          onPress={() => navigation.navigate('Register')}
+          style={[styles.registerButton, isLoading && styles.disabled]}
+          onPress={() => !isLoading && navigation.navigate('Register')}
+          disabled={isLoading}
         >
           <Text style={styles.registerText}>
             Não possui conta? <Text style={styles.registerHighlight}>Criar agora</Text>
@@ -114,6 +114,7 @@ const Login = ({ navigation }) => {
       <Toast 
         visible={toast.visible}
         message={toast.message}
+        type={toast.type}
         onHide={hideToast}
       />
     </View>
@@ -152,6 +153,9 @@ const styles = StyleSheet.create({
   registerHighlight: {
     color: '#007AFF',
     fontWeight: 'bold',
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });
 

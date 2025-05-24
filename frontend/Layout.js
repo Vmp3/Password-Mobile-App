@@ -6,28 +6,46 @@ import ViewPasswords from './src/views/ViewPasswords';
 import Login from './src/views/Login';
 import Register from './src/views/Register';
 import SavedPasswords from './src/views/SavedPasswords';
-import { AuthProvider } from './src/context/AuthContext';
-import TestApi from './src/views/testapi/TestApi';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
+
+import './src/utils/logger';
 
 const Stack = createNativeStackNavigator();
+
+const AppNavigator = () => {
+  const { isLoggedIn, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  return (
+    <Stack.Navigator 
+      screenOptions={{
+        headerShown: false,
+      }}
+    >
+      {!isLoggedIn() ? (
+        <>
+          <Stack.Screen name="Login" component={Login} />
+          <Stack.Screen name="Register" component={Register} />
+        </>
+      ) : (
+        <>
+          <Stack.Screen name="PasswordGenerator" component={PasswordGenerator} />
+          <Stack.Screen name="ViewPasswords" component={ViewPasswords} />
+          <Stack.Screen name="SavedPasswords" component={SavedPasswords} />
+        </>
+      )}
+    </Stack.Navigator>
+  );
+};
 
 export default function Layout() {
   return (
     <AuthProvider>
       <NavigationContainer>
-        <Stack.Navigator 
-          initialRouteName="PasswordGenerator"
-          screenOptions={{
-            headerShown: false,
-          }}
-        >
-          <Stack.Screen name="PasswordGenerator" component={PasswordGenerator} />
-          <Stack.Screen name="ViewPasswords" component={ViewPasswords} />
-          <Stack.Screen name="Login" component={Login} />
-          <Stack.Screen name="Register" component={Register} />
-          <Stack.Screen name="SavedPasswords" component={SavedPasswords} />
-          <Stack.Screen name="TestApi" component={TestApi}/>
-        </Stack.Navigator>
+        <AppNavigator />
       </NavigationContainer>
     </AuthProvider>
   );
