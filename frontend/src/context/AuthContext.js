@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }) => {
           setUser(JSON.parse(userData));
         }
       } catch (error) {
-        console.error('Erro ao carregar dados do usuário:', error);
         await AsyncStorage.removeItem('authToken');
         await AsyncStorage.removeItem('user');
       } finally {
@@ -111,7 +110,6 @@ export const AuthProvider = ({ children }) => {
     try {
       await authService.signOut();
     } catch (error) {
-      console.error('Erro ao fazer logout no servidor:', error);
     } finally {
       try {
         await AsyncStorage.removeItem('authToken');
@@ -119,7 +117,6 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         return true;
       } catch (error) {
-        console.error('Erro ao limpar dados locais:', error);
         setUser(null);
         return false;
       }

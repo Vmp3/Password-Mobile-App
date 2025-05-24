@@ -29,7 +29,6 @@ export const discoverNetworkIP = async () => {
 
     return null;
   } catch (error) {
-    console.error('Erro ao descobrir IP:', error);
     return null;
   }
 };
@@ -91,4 +90,28 @@ export const isValidIP = (ip) => {
     const num = parseInt(part, 10);
     return num >= 0 && num <= 255;
   });
+};
+
+export const discoverLocalIP = async () => {
+  const commonRanges = [
+    '192.168.1',
+    '192.168.0', 
+    '10.0.0',
+    '172.16.0'
+  ];
+
+  for (const range of commonRanges) {
+    try {
+      for (let i = 1; i <= 254; i++) {
+        const ip = `${range}.${i}`;
+        const isReachable = await testConnection(ip, 1000);
+        if (isReachable) {
+          return ip;
+        }
+      }
+    } catch (error) {
+    }
+  }
+  
+  return null;
 }; 

@@ -29,7 +29,6 @@ const SavedPasswords = ({ navigation }) => {
         showToast(result.message || 'Erro ao carregar senhas');
       }
     } catch (error) {
-      console.error('Erro ao carregar senhas salvas:', error);
       showToast('Erro de conexão. Verifique sua internet.');
     } finally {
       setIsLoading(false);
@@ -62,7 +61,6 @@ const SavedPasswords = ({ navigation }) => {
       await Clipboard.setString(password);
       showToast('Senha copiada!');
     } catch (error) {
-      console.error('Erro ao copiar senha:', error);
       showToast('Erro ao copiar senha');
     }
   };
@@ -89,7 +87,6 @@ const SavedPasswords = ({ navigation }) => {
                 showToast(result.message || 'Erro ao excluir senha');
               }
             } catch (error) {
-              console.error('Erro ao excluir senha:', error);
               showToast('Erro de conexão. Verifique sua internet.');
             }
           },

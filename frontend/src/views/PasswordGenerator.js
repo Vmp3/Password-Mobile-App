@@ -20,20 +20,18 @@ const PasswordGenerator = ({ navigation }) => {
   const { isLoggedIn, logout, user } = useAuth();
 
   useEffect(() => {
-    loadSavedPasswords();
-  }, []);
-
-  const loadSavedPasswords = async () => {
-    try {
-      const passwords = await AsyncStorage.getItem('Senhas');
-      if (passwords) {
-        setSavedPasswords(JSON.parse(passwords));
+    const loadPasswords = async () => {
+      try {
+        const result = await itemService.getItems();
+        if (result.success) {
+          setSavedPasswords(result.data);
+        }
+      } catch (error) {
       }
-    } catch (error) {
-      console.error('Erro ao carregar senhas:', error);
-      showToast('Erro ao carregar senhas');
-    }
-  };
+    };
+
+    loadPasswords();
+  }, []);
 
   const showToast = (message) => {
     setToast({ visible: false, message: '' });
@@ -56,7 +54,6 @@ const PasswordGenerator = ({ navigation }) => {
       setSavedPasswords(updatedPasswords);
       showToast('Senha gerada com sucesso!');
     } catch (error) {
-      console.error('Erro ao gerar/salvar senha:', error);
       showToast('Erro ao gerar senha');
     }
   };
@@ -67,7 +64,6 @@ const PasswordGenerator = ({ navigation }) => {
         await Clipboard.setString(password);
         showToast('Senha copiada!');
       } catch (error) {
-        console.error('Erro ao copiar senha:', error);
         showToast('Erro ao copiar senha');
       }
     }
@@ -82,23 +78,28 @@ const PasswordGenerator = ({ navigation }) => {
   };
 
   const handleSavePassword = async (passwordData) => {
-    if (isLoading) return;
-    
+    if (!passwordData.name.trim()) {
+      showToast('Por favor, insira um nome para a senha');
+      return;
+    }
+
     setIsLoading(true);
-    
     try {
       const result = await itemService.createItem(passwordData.name, passwordData.value);
       
       if (result.success) {
-        setSaveModalVisible(false);
         showToast('Senha salva com sucesso!');
+        setSaveModalVisible(false);
         setPassword('');
+        const updatedResult = await itemService.getItems();
+        if (updatedResult.success) {
+          setSavedPasswords(updatedResult.data);
+        }
       } else {
         showToast(result.message || 'Erro ao salvar senha');
       }
     } catch (error) {
-      console.error('Erro ao salvar senha:', error);
-      showToast('Erro de conexão. Verifique sua internet.');
+      showToast('Erro inesperado');
     } finally {
       setIsLoading(false);
     }

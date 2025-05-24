@@ -8,26 +8,24 @@ const ViewPasswords = ({ navigation }) => {
   const [passwords, setPasswords] = useState([]);
 
   useEffect(() => {
+    const loadPasswords = async () => {
+      try {
+        const savedPasswords = await AsyncStorage.getItem('Senhas');
+        if (savedPasswords) {
+          setPasswords(JSON.parse(savedPasswords));
+        }
+      } catch (error) {
+      }
+    };
+
     loadPasswords();
   }, []);
-
-  const loadPasswords = async () => {
-    try {
-      const savedPasswords = await AsyncStorage.getItem('Senhas');
-      if (savedPasswords) {
-        setPasswords(JSON.parse(savedPasswords));
-      }
-    } catch (error) {
-      console.error('Erro ao carregar senhas:', error);
-    }
-  };
 
   const handleClearPasswords = async () => {
     try {
       await AsyncStorage.removeItem('Senhas');
       setPasswords([]);
     } catch (error) {
-      console.error('Erro ao limpar senhas:', error);
     }
   };
 
