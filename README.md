@@ -104,7 +104,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 #### 1. Clone o repositório
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/Vmp3/Password-Mobile-App
 cd Password-Mobile-App
 ```
 
