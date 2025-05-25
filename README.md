@@ -96,9 +96,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ## 🛠️ Como Executar
 
 ### ⚙️ Pré-requisitos
-- **Docker** e **Docker Compose**
-- **Node.js 18+** e **npm**
 - **Git**
+- **Docker**
+- **Node.js 18+** e **npm**
 
 ### 🔧 Desenvolvimento
 
@@ -112,7 +112,7 @@ cd Password-Mobile-App
 ```bash
 cd backend
 
-# Crie o arquivo .env baseado no exemplo (contém PORT e DATABASE_URL)
+# Crie o arquivo .env baseado no exemplo
 cp .env.example .env
 
 # Execute em modo desenvolvimento (com hot reload)
@@ -239,7 +239,6 @@ DATABASE_URL=host=postgres user=postgres password=postgres dbname=password_app p
 ```
 
 **Outras variáveis** são configuradas automaticamente pelo Docker Compose:
-- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` - Configuração do PostgreSQL
 - `JWT_SECRET` - Gerado automaticamente se não definido
 
 Para usar:
