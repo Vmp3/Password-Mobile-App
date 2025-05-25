@@ -133,7 +133,7 @@ npm install
 npm start
 ```
 
-Aperte A para abrir automaticamente no Android, através do Android Studio
+Aperte A para abrir automaticamente no Android, usando o Expo.
 
 ### 🚀 Produção
 
